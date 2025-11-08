@@ -1,1 +1,72 @@
+# This is the name of your workflow
+name: Update HTML and README
 
+# This 'on' block defines the trigger
+# This workflow will run on a 'push' event
+# to the 'main' branch
+on:
+  push:
+    branches:
+      - main
+
+# 'jobs' contains the tasks to run
+jobs:
+  update_files: # We've named our job 'update_files'
+    runs-on: ubuntu-latest # It will run on a fresh Linux machine
+    
+    # --- FIX 1: PREVENT INFINITE LOOP ---
+    # This condition ensures the job ONLY runs if the push was
+    # made by a human user, not by the 'github-actions[bot]' itself.
+    if: github.actor != 'github-actions[bot]'
+    
+    # 'steps' are the individual commands within the job
+    steps:
+      
+      # --- Step 1: Checkout Repository ---
+      # This step checks out your repository's code so the workflow can access it
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # --- Step 2: Update index.html (with safety check) ---
+      - name: Update index.html
+        run: |
+          # --- FIX 2a: Check if file exists ---
+          if [ -f index.html ]; then
+            echo "Updating index.html..."
+            sed -i '/<\/body>/i <p>Updated by ${{ github.actor }} on '"$(date)"'</p>' index.html
+          else
+            echo "index.html not found. Skipping."
+          fi
+
+      # --- Step 3: Update README.md (with safety check) ---
+      - name: Update README.md
+        run: |
+          # --- FIX 2b: Check if file exists ---
+          if [ -f README.md ]; then
+            echo "Updating README.md..."
+            echo "### Updated by ${{ github.actor }} on $(date +'%Y-%m-%d %H:%M:%S') [Commit: $(git rev-parse --short HEAD)]" >> README.md
+          else
+            echo "README.md not found. Skipping."
+          fi
+
+      # --- Step 4: Commit and Push Changes (Improved Logic) ---
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # --- FIX 4: Be specific about which files to add ---
+          git add index.html README.md
+          
+          # --- FIX 3: Check for changes before committing ---
+          # 'git diff --staged --quiet' exits with 0 if no changes, 1 if changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            echo "Changes detected. Committing and pushing..."
+            git commit -m "Workflow: Updated HTML and README for ${{ github.actor }}"
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+            git push origin main
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
