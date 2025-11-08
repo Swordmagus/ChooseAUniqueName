@@ -1,28 +1,45 @@
+# This is the name of your workflow [cite: 24]
 name: Update HTML and README
 
+# This 'on' block defines the trigger [cite: 316, 320]
+# This workflow will run on a 'push' event [cite: 34]
+# to the 'main' branch [cite: 35, 36]
 on:
   push:
     branches:
       - main
 
+# 'jobs' contains the tasks to run [cite: 39, 317]
 jobs:
-  update_files: 
-    [cite_start]runs-on: ubuntu-latest 
-
+  update_files: # We've named our job 'update_files'
+    [cite_start]runs-on: ubuntu-latest # It will run on a fresh Linux machine [cite: 41]
+    
+    # 'steps' are the individual commands within the job [cite: 42, 318]
     steps:
       
+      # --- Step 1: Checkout Repository (from Activity 1) ---
+      # This step checks out your repository's code so the workflow can access it [cite: 43, 45]
       - [cite_start]name: Checkout Repository [cite: 44]
         [cite_start]uses: actions/checkout@v3 [cite: 45]
 
+      # --- Step 2: Update index.html (from Activity 2) ---
+      # This step modifies your index.html file [cite: 47]
+      # We simplified this for a solo user. It uses 'github.actor' (your username) [cite: 51]
+      # and the 'sed' command to add a line just before the </body> tag [cite: 60, 63, 66]
       - name: Update index.html
         run: |
           sed -i '/<\/body>/i <p>Updated by ${{ github.actor }} on '"$(date)"'</p>' index.html
 
-
+      # --- Step 3: Update README.md (from Activity 3) ---
+      # This step appends a log line to your README.md file [cite: 92, 102]
+      # It includes your username, the date, and the commit ID [cite: 105, 106]
       - name: Update README.md
         run: |
           echo "### Updated by ${{ github.actor }} on $(date +'%Y-%m-%d %H:%M:%S') [Commit: $(git rev-parse --short HEAD)]" >> README.md [cite: 106]
 
+      # --- Step 4: Commit and Push Changes (from Activity 4) ---
+      # This step commits the changes made to index.html and README.md
+      # and pushes them back to your repository [cite: 111, 117]
       - [cite_start]name: Commit and Push Changes [cite: 117]
         run: |
           git config --global user.name "github-actions[bot]" [cite: 119]
