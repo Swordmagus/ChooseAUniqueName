@@ -1,0 +1,35 @@
+name: Update HTML and README
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update_files: 
+    [cite_start]runs-on: ubuntu-latest 
+
+    steps:
+      
+      - [cite_start]name: Checkout Repository [cite: 44]
+        [cite_start]uses: actions/checkout@v3 [cite: 45]
+
+      - name: Update index.html
+        run: |
+          sed -i '/<\/body>/i <p>Updated by ${{ github.actor }} on '"$(date)"'</p>' index.html
+
+
+      - name: Update README.md
+        run: |
+          echo "### Updated by ${{ github.actor }} on $(date +'%Y-%m-%d %H:%M:%S') [Commit: $(git rev-parse --short HEAD)]" >> README.md [cite: 106]
+
+      - [cite_start]name: Commit and Push Changes [cite: 117]
+        run: |
+          git config --global user.name "github-actions[bot]" [cite: 119]
+          git config --global user.email "github-actions[bot]@users.noreply.github.com" [cite: 120]
+          git add . [cite: 121]
+          git commit -m "Workflow: Updated HTML and README for ${{ github.actor }}" || echo "No changes to commit" [cite: 122]
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} [cite: 123]
+          git push origin main [cite: 123]
+        [cite_start]env: [cite: 124]
+          [cite_start]GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} [cite: 125]
